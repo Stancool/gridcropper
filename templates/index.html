@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>完美切分 | Grid Cropper</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #eef2ff;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1040px;
+        }
+
+        /* --- Landing Page --- */
+        .landing-view {
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 850;
+            margin-bottom: 4rem;
+            margin-top: 3rem;
+            letter-spacing: -0.05em;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            text-align: left;
+        }
+
+        .feature-icon {
+            background: var(--primary-light);
+            color: var(--primary);
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .feature-content h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+
+        .feature-content p {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            line-height: 1.5;
+        }
+
+        .upload-zone {
+            background: var(--white);
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            padding: 5rem 2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: #fafbff;
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .upload-v-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .upload-v-icon {
+            width: 64px;
+            height: 64px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-v-content h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .upload-v-content p {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+        }
+
+        /* --- Result Page --- */
+        .result-view {
+            display: none;
+            width: 100%;
+        }
+
+        .top-header {
+            background: var(--white);
+            padding: 1.25rem 1.75rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-badge {
+            background: #eef2ff;
+            color: var(--primary);
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 1.5rem;
+        }
+
+        .header-text h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .header-text p {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            height: 44px;
+            padding: 0 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-restart {
+            background: var(--white);
+            border: 1.5px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-restart:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-download {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-download:hover {
+            background: #4f46e5;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 3rem;
+        }
+
+        .col-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preview-pane {
+            background: #0f172a;
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .tiles-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .tile-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            background-size: cover;
+            background-position: center;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .tile-box:hover {
+            transform: scale(1.02);
+            z-index: 10;
+        }
+
+        .tile-box.selected {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .tile-box.selected::after {
+            content: "✓";
+            position: absolute;
+            right: 6px;
+            top: 6px;
+            background: var(--primary);
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .tile-label {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .original-pane {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .img-wrapper {
+            background: var(--white);
+            padding: 1.25rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            line-height: 0;
+        }
+
+        .img-wrapper img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        .guide-overlay {
+            position: absolute;
+            top: 1.25rem;
+            left: 1.25rem;
+            right: 1.25rem;
+            bottom: 1.25rem;
+            pointer-events: none;
+        }
+
+        .line {
+            position: absolute;
+            background: var(--primary);
+            opacity: 0.7;
+            box-shadow: 0 0 4px rgba(99, 102, 241, 0.5);
+        }
+
+        .vline {
+            width: 1.5px;
+            height: 100%;
+        }
+
+        .hline {
+            height: 1.5px;
+            width: 100%;
+        }
+
+        .hint-alert {
+            background: #f0f7ff;
+            border: 1px solid #dbeafe;
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px;
+            color: #1e40af;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .adjust-panel {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .adjust-panel h4 {
+            font-size: 0.95rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .sliders {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .slider-wrap label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+        }
+
+        @media (max-width: 900px) {
+
+            .features-grid,
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Landing State -->
+    <div class="container landing-view" id="landing-state">
+        <h1 class="hero-title">完美切分</h1>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-content">
+                    <h3>智能探測</h3>
+                    <p>自動識別黑白分割線，避開邊框殘留。</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✂️</div>
+                <div class="feature-content">
+                    <h3>精確提取</h3>
+                    <p>只提取真實的畫面區域，不留黑白死區。</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <div class="feature-content">
+                    <h3>隱私安全</h3>
+                    <p>所有處理均在本地，圖片不會上傳至任何服務器。</p>
+                </div>
+            </div>
+        </div>
+
+        <label class="upload-zone" id="drop-zone">
+            <div class="upload-v-content">
+                <div class="upload-v-icon">📤</div>
+                <h2>上傳圖片</h2>
+                <p>拖拽圖片到這裡或點擊選擇文件</p>
+                <p style="margin-top: 0.2rem; font-size: 0.75rem; opacity: 0.7;">支持 JPG, PNG, WEBP (最大 20MB)</p>
+            </div>
+            <input type="file" id="file-input" accept="image/*" style="display: none;">
+        </label>
+    </div>
+
+    <!-- Result State -->
+    <div class="container result-view" id="result-state">
+        <div class="top-header">
+            <div class="header-status">
+                <div class="status-badge">🔢</div>
+                <div class="header-text">
+                    <h2>切圖完成</h2>
+                    <p id="result-desc">已生成 9 張切片</p>
+                </div>
+            </div>
+            <div class="action-btns">
+                <button class="btn btn-restart" onclick="location.reload()">🔄 重新上傳</button>
+                <button class="btn btn-download" id="download-btn">📥 下載壓縮包</button>
+            </div>
+        </div>
+
+        <div class="split-layout">
+            <div class="col-pre">
+                <div class="col-title">▦ 九宮格預覽</div>
+                <div class="preview-pane">
+                    <div class="tiles-grid" id="tiles-grid">
+                        <!-- tiles injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="original-pane">
+                <div class="col-title">🖼️ 原圖</div>
+                <div class="img-wrapper">
+                    <img id="main-image" src="">
+                    <div class="guide-overlay" id="guide-overlay">
+                        <!-- lines injected here -->
+                    </div>
+                </div>
+
+                <div class="adjust-panel">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4 style="font-size: 0.95rem; margin: 0;">切分調整</h4>
+                        <select id="grid-selector"
+                            style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.8rem; background: #fff;">
+                            <option value="3x3">3x3 (九宮格)</option>
+                            <option value="3x2">3x2 (6格)</option>
+                            <option value="4x4">4x4 (16格)</option>
+                            <option value="4x3">4x3 (12格)</option>
+                            <option value="custom">自定義 (X by Y)</option>
+                        </select>
+                    </div>
+                    <div class="sliders" id="sliders-container">
+                        <!-- sliders injected here -->
+                    </div>
+                    <div id="custom-grid-inputs"
+                        style="display: none; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <div class="slider-wrap">
+                            <label>列數 (X)</label>
+                            <input type="number" id="custom-cols" min="1" max="10" value="3"
+                                style="width: 100%; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border);">
+                        </div>
+                        <div class="slider-wrap">
+                            <label>行數 (Y)</label>
+                            <input type="number" id="custom-rows" min="1" max="10" value="3"
+                                style="width: 100%; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border);">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hint-alert">
+                    <strong>提示：</strong> 若切分線不準確，請選擇正確的切分模式並拖動滑桿微調。下載後的檔名將按 001, 002 順序排列。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFileId = null;
+        let originalImg = null;
+        let currentGrid = { cols: 3, rows: 3 };
+        let selectedIndices = new Set();
+
+        const el = {
+            dropZone: document.getElementById('drop-zone'),
+            fileInput: document.getElementById('file-input'),
+            landing: document.getElementById('landing-state'),
+            result: document.getElementById('result-state'),
+            mainImg: document.getElementById('main-image'),
+            guideOverlay: document.getElementById('guide-overlay'),
+            slidersContainer: document.getElementById('sliders-container'),
+            gridSelector: document.getElementById('grid-selector'),
+            tilesGrid: document.getElementById('tiles-grid'),
+            downloadBtn: document.getElementById('download-btn'),
+            resultDesc: document.getElementById('result-desc'),
+            customInputs: document.getElementById('custom-grid-inputs'),
+            customCols: document.getElementById('custom-cols'),
+            customRows: document.getElementById('custom-rows')
+        };
+
+        function initGrid(type) {
+            let cols, rows;
+            if (type === 'custom') {
+                cols = parseInt(el.customCols.value) || 1;
+                rows = parseInt(el.customRows.value) || 1;
+                el.customInputs.style.display = 'grid';
+            } else {
+                const parts = type.split('x');
+                cols = parseInt(parts[0]);
+                rows = parseInt(parts[1]);
+                el.customInputs.style.display = 'none';
+            }
+            currentGrid = { cols, rows };
+
+            el.guideOverlay.innerHTML = '';
+            el.slidersContainer.innerHTML = '';
+            el.tilesGrid.innerHTML = '';
+            el.tilesGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            el.resultDesc.textContent = `已生成 ${cols * rows} 張切片`;
+
+            // Create tiles
+            selectedIndices.clear();
+            for (let i = 0; i < cols * rows; i++) {
+                const idx = i + 1;
+                const div = document.createElement('div');
+                div.className = 'tile-box';
+                div.innerHTML = `<span class="tile-label">${idx}</span>`;
+                div.onclick = () => toggleTile(idx, div);
+                el.tilesGrid.appendChild(div);
+            }
+
+            // Create Vertical Lines & Sliders
+            for (let i = 1; i < cols; i++) {
+                const val = (i * 100 / cols);
+                const line = document.createElement('div');
+                line.className = 'line vline';
+                line.id = `vl-${i}`;
+                line.style.left = val + '%';
+                el.guideOverlay.appendChild(line);
+
+                const wrap = document.createElement('div');
+                wrap.className = 'slider-wrap';
+                wrap.innerHTML = `<label>垂直線 ${i}</label><input type="range" class="grid-slider v-slider" data-idx="${i}" min="${val - 15}" max="${val + 15}" value="${val}" step="0.1">`;
+                el.slidersContainer.appendChild(wrap);
+            }
+
+            // Create Horizontal Lines & Sliders
+            for (let i = 1; i < rows; i++) {
+                const val = (i * 100 / rows);
+                const line = document.createElement('div');
+                line.className = 'line hline';
+                line.id = `hl-${i}`;
+                line.style.top = val + '%';
+                el.guideOverlay.appendChild(line);
+
+                const wrap = document.createElement('div');
+                wrap.className = 'slider-wrap';
+                wrap.innerHTML = `<label>水平線 ${i}</label><input type="range" class="grid-slider h-slider" data-idx="${i}" min="${val - 15}" max="${val + 15}" value="${val}" step="0.1">`;
+                el.slidersContainer.appendChild(wrap);
+            }
+
+            document.querySelectorAll('.grid-slider').forEach(s => s.addEventListener('input', updatePreview));
+            if (originalImg) updatePreview();
+        }
+
+        function toggleTile(idx, element) {
+            if (selectedIndices.has(idx)) {
+                selectedIndices.delete(idx);
+                element.classList.remove('selected');
+            } else {
+                selectedIndices.add(idx);
+                element.classList.add('selected');
+            }
+
+            if (selectedIndices.size > 0) {
+                el.downloadBtn.textContent = `📥 下載選中的 ${selectedIndices.size} 張`;
+            } else {
+                el.downloadBtn.textContent = "📥 下載全部壓縮包";
+            }
+        }
+
+        el.gridSelector.addEventListener('change', (e) => initGrid(e.target.value));
+        el.customCols.addEventListener('change', () => initGrid('custom'));
+        el.customRows.addEventListener('change', () => initGrid('custom'));
+
+        ['dragover', 'dragleave', 'drop'].forEach(ev => {
+            el.dropZone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+        });
+
+        el.dropZone.addEventListener('dragover', () => el.dropZone.classList.add('dragover'));
+        el.dropZone.addEventListener('dragleave', () => el.dropZone.classList.remove('dragover'));
+
+        el.dropZone.addEventListener('drop', e => {
+            el.dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) handleUpload(e.dataTransfer.files[0]);
+        });
+
+        el.fileInput.addEventListener('change', () => {
+            if (el.fileInput.files.length) handleUpload(el.fileInput.files[0]);
+        });
+
+        function handleUpload(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    currentFileId = data.file_id;
+                    el.mainImg.src = `/preview/${currentFileId}`;
+                    el.landing.style.display = 'none';
+                    el.result.style.display = 'block';
+
+                    originalImg = new Image();
+                    originalImg.src = el.mainImg.src;
+                    originalImg.onload = () => {
+                        initGrid(el.gridSelector.value);
+                    };
+                });
+        }
+
+        function updatePreview() {
+            const vSliders = Array.from(document.querySelectorAll('.v-slider'));
+            const hSliders = Array.from(document.querySelectorAll('.h-slider'));
+
+            const vLines = vSliders.map(s => parseFloat(s.value));
+            const hLines = hSliders.map(s => parseFloat(s.value));
+
+            vLines.forEach((val, i) => {
+                const l = document.getElementById(`vl-${i + 1}`);
+                if (l) l.style.left = val + '%';
+            });
+            hLines.forEach((val, i) => {
+                const l = document.getElementById(`hl-${i + 1}`);
+                if (l) l.style.top = val + '%';
+            });
+
+            const tiles = document.querySelectorAll('.tile-box');
+            const xs = [0, ...vLines, 100];
+            const ys = [0, ...hLines, 100];
+
+            let count = 0;
+            for (let r = 0; r < currentGrid.rows; r++) {
+                for (let c = 0; c < currentGrid.cols; c++) {
+                    const tile = tiles[count++];
+                    if (!tile) continue;
+                    const l = xs[c];
+                    const t = ys[r];
+                    const w = xs[c + 1] - xs[c];
+                    const h = ys[r + 1] - ys[r];
+
+                    tile.style.backgroundImage = `url(${originalImg.src})`;
+                    tile.style.backgroundSize = `${100 * 100 / w}% ${100 * 100 / h}%`;
+                    tile.style.backgroundPosition = `${l * 100 / (100 - w)}% ${t * 100 / (100 - h)}%`;
+                }
+            }
+        }
+
+        el.downloadBtn.addEventListener('click', () => {
+            el.downloadBtn.innerHTML = "⌛ 處理中...";
+            const vLines = Array.from(document.querySelectorAll('.v-slider')).map(s => parseFloat(s.value));
+            const hLines = Array.from(document.querySelectorAll('.h-slider')).map(s => parseFloat(s.value));
+
+            fetch('/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    file_id: currentFileId,
+                    x_lines: vLines,
+                    y_lines: hLines,
+                    selected_indices: Array.from(selectedIndices)
+                })
+            })
+                .then(res => {
+                    const contentDisposition = res.headers.get('Content-Disposition');
+                    let filename = "perfect_split.zip";
+                    if (contentDisposition && contentDisposition.indexOf('filename=') !== -1) {
+                        filename = contentDisposition.split('filename=')[1].replace(/["']/g, '');
+                    } else if (selectedIndices.size === 1) {
+                        filename = `shot${Array.from(selectedIndices)[0].toString().padStart(3, '0')}.png`;
+                    }
+                    return res.blob().then(blob => ({ blob, filename }));
+                })
+                .then(({ blob, filename }) => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    a.click();
+                    el.downloadBtn.innerHTML = selectedIndices.size > 0 ? `📥 下載選中的 ${selectedIndices.size} 張` : "📥 下載全部壓縮包";
+                });
+        });
+    </script>
+</body>
+
+</html>
